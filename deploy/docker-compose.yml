@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+      target: prod
+    image: ct_ws:${CT_WS_VERSION:-latest}
+    restart: always
+    env_file:
+    - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      CT_WS_HOST: 0.0.0.0
+      CT_WS_DB_HOST: ct_ws-db
+      CT_WS_DB_PORT: 5432
+      CT_WS_DB_USER: ct_ws
+      CT_WS_DB_PASS: ct_ws
+      CT_WS_DB_BASE: ct_ws
+
+  db:
+    image: postgres:13.8-bullseye
+    hostname: ct_ws-db
+    environment:
+      POSTGRES_PASSWORD: "ct_ws"
+      POSTGRES_USER: "ct_ws"
+      POSTGRES_DB: "ct_ws"
+    volumes:
+    - ct_ws-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: pg_isready -U ct_ws
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+  migrator:
+    image: ct_ws:${CT_WS_VERSION:-latest}
+    restart: "no"
+    command: alembic upgrade head
+    environment:
+      CT_WS_DB_HOST: ct_ws-db
+      CT_WS_DB_PORT: 5432
+      CT_WS_DB_USER: ct_ws
+      CT_WS_DB_PASS: ct_ws
+      CT_WS_DB_BASE: ct_ws
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+
+volumes:
+  ct_ws-db-data:
+    name: ct_ws-db-data
