@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from sqlalchemy.engine import make_url
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from ct_ws.settings import settings
@@ -13,7 +13,8 @@ async def create_database() -> None:
     async with engine.connect() as conn:
         database_existance = await conn.execute(
             text(
-                f"SELECT 1 FROM pg_database WHERE datname='{settings.db_base}'",  # noqa: E501, S608
+                f"SELECT 1 FROM pg_database "  # noqa: E501, S608
+                f"WHERE datname='{settings.db_base}'",
             ),
         )
         database_exists = database_existance.scalar() == 1
@@ -24,7 +25,9 @@ async def create_database() -> None:
     async with engine.connect() as conn:  # noqa: WPS440
         await conn.execute(
             text(
-                f'CREATE DATABASE "{settings.db_base}" ENCODING "utf8" TEMPLATE template1',  # noqa: E501
+                f'CREATE DATABASE "{settings.db_base}" '
+                'ENCODING "utf8" TEMPLATE template1',
+                # noqa: E501
             ),
         )
 

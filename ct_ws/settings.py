@@ -1,4 +1,5 @@
 import enum
+from os import getenv
 from pathlib import Path
 from tempfile import gettempdir
 
@@ -45,6 +46,9 @@ class Settings(BaseSettings):
     db_pass: str = "ct_ws"
     db_base: str = "ct_ws"
     db_echo: bool = False
+
+    # Api settings
+    api_base_path: str = getenv("API_ROOT_PATH", "/api")
 
     @property
     def db_url(self) -> URL:
