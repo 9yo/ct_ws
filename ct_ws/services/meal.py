@@ -1,14 +1,17 @@
 """Meal Service."""
-from datetime import datetime
+import logging
 from typing import List
 
 from sqlalchemy import select
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ct_ws.db.models.meal import Meal
 from ct_ws.web.api.base.schema import Navigation
 from ct_ws.web.api.meal.schema import Meal as MealSchema
 from ct_ws.web.api.meal.schema import MealFilter
+
+logger = logging.getLogger("uvicorn")
 
 
 class MealService:
@@ -17,8 +20,8 @@ class MealService:
     @staticmethod
     async def get_meals(
         session: AsyncSession,
-        filter_: MealFilter | None = None,
-        navigation: Navigation | None = None,
+        filter_: MealFilter,
+        navigation: Navigation,
     ) -> List[Meal]:
         """
         The get_meals function returns a list of meals.
@@ -30,30 +33,23 @@ class MealService:
         :rtype: List[Meal]
         :doc-author: Trelent
         """  # noqa: RST306
-        offset: int = 0
-        limit: int = 100
+        query = select(Meal).offset(navigation.offset).limit(navigation.limit)
 
-        if navigation:
-            offset = navigation.offset
-            limit = navigation.limit
+        if filter_.user_id:
+            query = query.where(Meal.user_id == filter_.user_id)
 
-        date_filters: List[datetime | None] = [None for _ in range(2)]
-        user_id = None
-        if filter_:
-            date_filters[0] = filter_.date_gt
-            date_filters[1] = filter_.date_lt
-            user_id = filter_.user_id
+        if filter_.date_gt:
+            query = query.where(Meal.created_at > filter_.date_gt.replace(tzinfo=None))
 
-        query = select(Meal).offset(offset).limit(limit)
+        if filter_.date_lt:
+            query = query.where(Meal.timestamp < filter_.date_lt.replace(tzinfo=None))
 
-        if user_id:
-            query = query.where(Meal.user_id == user_id)
+        compiled_query = query.compile(
+            dialect=postgresql.dialect(),
+            compile_kwargs={"literal_binds": True},
+        )
 
-        if date_filters[0]:
-            query = query.where(Meal.timestamp > date_filters[0])
-
-        if date_filters[1]:
-            query = query.where(Meal.timestamp < date_filters[1])
+        logger.info(f"MealService.get_meals.query=\n{compiled_query}")
 
         async with session.begin():
             return list((await session.execute(query)).scalars().all())

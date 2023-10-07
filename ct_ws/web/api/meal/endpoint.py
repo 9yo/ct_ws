@@ -16,8 +16,8 @@ router = APIRouter()
 
 @router.get("/", response_model=List[MealResponse])
 async def get_meals(
-    filter_: MealFilter | None = Depends(MealFilter.as_form),
-    navigation: Navigation | None = Depends(Navigation.as_form),
+    filter_: MealFilter = Depends(),
+    navigation: Navigation = Depends(),
     session: AsyncSession = Depends(get_db_session),
 ) -> List[MealResponse]:
     """

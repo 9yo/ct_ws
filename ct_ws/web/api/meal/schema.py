@@ -1,10 +1,11 @@
 """Meal API models."""
 from datetime import datetime
+from typing import Any, Dict
 
-from fastapi import Form
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
-
-from ct_ws.web.api.base.schema import DatetimeComparisonFilter
+from pydantic.class_validators import root_validator
+from starlette import status
 
 
 class Meal(BaseModel):
@@ -30,55 +31,33 @@ class MealFilter(BaseModel):
     """Meal filter model."""
 
     user_id: int | None = Field(None, title="User ID")
-    date: DatetimeComparisonFilter | None = Field(None, title="Date")
+    date_gt: datetime | None = Field(None, title="Greater than datetime")
+    date_lt: datetime | None = Field(None, title="Less than datetime")
 
-    @property
-    def date_lt(self) -> datetime | None:
-        """
-        Date less than.
-
-        :return: The date less than.
-        :rtype: datetime | None
-        """
-        if self.date:
-            return self.date.lt
-        return None
-
-    @property
-    def date_gt(self) -> datetime | None:
-        """
-        Date less than.
-
-        :return: The date greater than.
-        :rtype: datetime | None
-        """
-        if self.date:
-            return self.date.gt
-        return None
-
+    @root_validator
     @classmethod
-    def as_form(
+    def validate_datetime_comparison_filter(
         cls,
-        user_id: int | None = Form(None, title="User ID"),
-        date_gt: datetime | None = Form(None, title="Greater than timestamp"),
-        date_lt: datetime | None = Form(None, title="Less than timestamp"),
-    ) -> "MealFilter":
+        values: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """
-        Pydatic model as a form.
+        Validate the datetime comparison filter.
 
-        The as_form function is a class method that takes in the same arguments as
-        the constructor, but with some additional keyword arguments. These are used to
-        create an instance of the Form class from pydantic. This allows us to use this
-        class as a filter for our database query.
+        The validate_datetime_comparison_filter function validates the datetime
+        comparison filter.
 
-        :param user_id: int | None: Specify that the user_id field is an integer or none
-        :param date_gt: datetime | None: Specify that the parameter is optional
-        :param date_lt: datetime | None: Specify that the date_lt parameter is optional
-        :return: A mealfilter object, which is a dataclass
-        :rtype: MealFilter
+        :param values: dict: A dictionary of values
+        :return: A dictionary of values
+        :rtype: Dict[str, Any]
+        :raises HTTPException: If date_gt is greater than or equal to date_lt
         :doc-author: Trelent
-        """
-        return cls(
-            user_id=user_id,
-            date=DatetimeComparisonFilter(gt=date_gt, lt=date_lt),
-        )
+        """  # noqa: DAR003
+        date_gt = values.get("date_gt")
+        date_lt = values.get("date_lt")
+        if date_gt and date_lt:
+            if date_gt > date_lt or date_gt == date_lt:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="date_gt must be less than date_lt",
+                )
+        return values
