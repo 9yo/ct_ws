@@ -10,7 +10,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: '3.11'
     - name: Install deps
       uses: knowsuchagency/poetry-install@v1
       env:
@@ -24,7 +24,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: '3.11'
     - name: Install deps
       uses: knowsuchagency/poetry-install@v1
       env:
@@ -38,7 +38,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: '3.11'
     - name: Install deps
       uses: knowsuchagency/poetry-install@v1
       env:
@@ -67,7 +67,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: '3.11'
     - name: Install deps
       uses: knowsuchagency/poetry-install@v1
       env:
