@@ -1,11 +1,14 @@
 """UserBodyParameters model."""
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ct_ws.db.base import Base
-from ct_ws.db.models.user import User
+
+if TYPE_CHECKING:
+    from ct_ws.db.models.user import User
 
 
 class UserBodyParameters(Base):
@@ -14,7 +17,7 @@ class UserBodyParameters(Base):
     __tablename__ = "user_body_parameters"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user: Mapped[User] = mapped_column(back_populates="user_body_parameters")
+    user: Mapped["User"] = relationship(back_populates="user_body_parameters")
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
         comment="User ID of the user body parameters",

@@ -1,6 +1,8 @@
 """Meal model."""
 
-from sqlalchemy import DateTime, ForeignKey
+from datetime import datetime
+
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ct_ws.db.base import Base
@@ -11,7 +13,7 @@ class Meal(Base):
     """Meal model."""
 
     __tablename__ = "meals"
-    id = mapped_column(
+    id: Mapped[int] = mapped_column(
         primary_key=True,
         index=True,
     )
@@ -33,7 +35,7 @@ class Meal(Base):
     carbs: Mapped[float] = mapped_column(
         comment="Carbs of the meal",
     )
-    timestamp: Mapped[DateTime] = mapped_column(
+    timestamp: Mapped[datetime] = mapped_column(
         comment="Timestamp of the meal",
     )
     user_id: Mapped[int] = mapped_column(
@@ -46,6 +48,6 @@ class Meal(Base):
         default=False,
         comment="Is deleted flag of the meal",
     )
-    created_at: Mapped[DateTime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         comment="Created at timestamp of the meal",
     )
