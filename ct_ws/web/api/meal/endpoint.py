@@ -40,7 +40,7 @@ async def get_meals(
     return [MealResponse.from_orm(meal) for meal in meals]
 
 
-@router.post("")
+@router.post("/", response_model=MealResponse)
 async def add_meal(
     meal: MealSchema,
     session: AsyncSession = Depends(get_db_session),
@@ -68,7 +68,7 @@ async def add_meal(
     return MealResponse.from_orm(meal_db)
 
 
-@router.get("/{meal_id}")
+@router.get("/{meal_id}/", response_model=MealResponse, name="get_meal")
 async def get_meal(
     meal_id: int,
     session: AsyncSession = Depends(get_db_session),
@@ -90,7 +90,7 @@ async def get_meal(
     return MealResponse.from_orm(meal_db)
 
 
-@router.delete("/{meal_id}")
+@router.delete("/{meal_id}/", response_model=MealResponse, name="delete_meal")
 async def delete_meal(
     meal_id: int,
     session: AsyncSession = Depends(get_db_session),

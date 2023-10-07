@@ -1,9 +1,13 @@
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+
+from ct_ws.db.models.meal import Meal
+from ct_ws.db.models.user import User
 
 
 @pytest.mark.anyio
@@ -67,7 +71,7 @@ async def test_get_meals(
         ),
     ],
 )
-async def test_date_comparison(
+async def test_get_meals_date_comparison(
     client: AsyncClient,
     fastapi_app: FastAPI,
     params: Dict[str, Any],
@@ -93,3 +97,73 @@ async def test_date_comparison(
         params=params,
     )
     assert response.status_code == expected_status
+
+
+@pytest.mark.anyio
+async def test_add_meal(
+    client: AsyncClient,
+    fastapi_app: FastAPI,
+    session_user: Tuple[AsyncSession, User],
+) -> None:
+    """
+    Checks Meals post endpoint.
+
+    :param client: client for the app.
+    :param fastapi_app: current FastAPI application.
+    """
+    session, user = session_user
+    params = {
+        "user_id": user.id,
+        "name": "string",
+        "description": "string",
+        "calories": 0,
+        "protein": 0,
+        "fat": 0,
+        "carbs": 0,
+    }
+    response = await client.post(
+        fastapi_app.url_path_for("add_meal"),
+        headers={"Authorization": "Bearer 1"},
+        json=params,
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.anyio
+async def test_get_meal(
+    client: AsyncClient,
+    fastapi_app: FastAPI,
+    session_meal: Tuple[AsyncSession, Meal],
+) -> None:
+    """
+    Checks Meals post endpoint.
+
+    :param client: client for the app.
+    :param fastapi_app: current FastAPI application.
+    """
+    session, meal = session_meal
+    response = await client.get(
+        fastapi_app.url_path_for("get_meal", meal_id=meal.id),
+        headers={"Authorization": "Bearer 1"},
+    )
+    assert response.status_code == status.HTTP_200_OK
+
+
+@pytest.mark.anyio
+async def test_delete_meal(
+    client: AsyncClient,
+    fastapi_app: FastAPI,
+    session_meal: Tuple[AsyncSession, Meal],
+) -> None:
+    """
+    Checks Meals post endpoint.
+
+    :param client: client for the app.
+    :param fastapi_app: current FastAPI application.
+    """
+    session, meal = session_meal
+    response = await client.delete(
+        fastapi_app.url_path_for("delete_meal", meal_id=meal.id),
+        headers={"Authorization": "Bearer 1"},
+    )
+    assert response.status_code == status.HTTP_200_OK

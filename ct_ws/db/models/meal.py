@@ -35,9 +35,6 @@ class Meal(Base):
     carbs: Mapped[float] = mapped_column(
         comment="Carbs of the meal",
     )
-    timestamp: Mapped[datetime] = mapped_column(
-        comment="Timestamp of the meal",
-    )
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id"),
         comment="User ID of the meal",
@@ -50,4 +47,5 @@ class Meal(Base):
     )
     created_at: Mapped[datetime] = mapped_column(
         comment="Created at timestamp of the meal",
+        default=datetime.utcnow,
     )

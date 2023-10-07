@@ -1,4 +1,4 @@
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Tuple
 
 import pytest
 from fastapi import FastAPI
@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from ct_ws.db.dependencies import get_db_session
+from ct_ws.db.models.meal import Meal
+from ct_ws.db.models.user import User
 from ct_ws.db.utils import create_database, drop_database
 from ct_ws.settings import settings
 from ct_ws.web.application import get_app
@@ -108,3 +110,60 @@ async def client(
     """
     async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
         yield ac
+
+
+@pytest.fixture
+async def session_user(
+    dbsession: AsyncSession,
+) -> AsyncGenerator[Tuple[AsyncSession, User], None]:
+    """
+    Fixture that creates a user in the database.
+
+    The session_user function is a fixture that creates a new database session and adds
+    a user to the database. It then yields the session and user instance so that they
+    can be used in tests. When all of the tests are finished, it will close out the
+    session.
+
+    :param dbsession: AsyncSession: Pass the database session to the function
+    :yield: A tuple containing an asyncsession and a user
+    :rtype: Tuple[AsyncSession, User]
+    :doc-author: Trelent
+    """
+    user_instance = User(username="test_user")
+
+    dbsession.add(user_instance)
+    await dbsession.commit()
+
+    yield dbsession, user_instance
+
+
+@pytest.fixture
+async def session_meal(
+    session_user: Tuple[AsyncSession, User],
+) -> AsyncGenerator[Tuple[AsyncSession, Meal], None]:
+    """
+    Fixture that creates a meal in the database.
+
+    The session_meal function is a fixture that creates a new meal for the user
+    and returns it. It also yields the session and meal to be used in tests.
+
+    :param session_user: Tuple[AsyncSession, User]:
+        Pass in the user object that was created
+    :yield: A tuple of the session and meal
+    :rtype: Tuple[AsyncSession, Meal]
+    :doc-author: Trelent
+    """
+    session, user = session_user
+    meal: Meal = Meal(
+        user_id=user.id,
+        name="Test Meal",
+        description="Test Description",
+        calories=100,
+        protein=10,
+        fat=10,
+        carbs=10,
+    )
+
+    session.add(meal)
+    await session.commit()
+    yield session, meal

@@ -2,9 +2,11 @@
 from decimal import Decimal
 from typing import List
 
+from fastapi.exceptions import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+from starlette import status
 
 from ct_ws.db.models.user import User
 from ct_ws.db.models.user_body_parameters import UserBodyParameters
@@ -82,11 +84,15 @@ class UserService:
         :param tg_id: int | None: Specify the telegram id of the user
         :return: A user object
         :rtype: User
-        :raises ValueError: If the user is not found
+        :raises HTTPException: If the user is not found
+        :raises HTTPException: If neither user_id or tg_id is specified
         :doc-author: Trelent
         """  # noqa: DAR003
         if not user_id and not tg_id:
-            raise ValueError("user_id or tg_id must be specified")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="user_id or tg_id must be specified",
+            )
 
         query = select(User)
 
@@ -100,7 +106,10 @@ class UserService:
         user = (await session.execute(query)).scalar_one_or_none()
 
         if not user:
-            raise ValueError("user not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
 
         return user
 

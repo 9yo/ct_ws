@@ -2,9 +2,11 @@
 import logging
 from typing import List
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
 
 from ct_ws.db.models.meal import Meal
 from ct_ws.web.api.base.schema import Navigation
@@ -42,7 +44,7 @@ class MealService:
             query = query.where(Meal.created_at > filter_.date_gt.replace(tzinfo=None))
 
         if filter_.date_lt:
-            query = query.where(Meal.timestamp < filter_.date_lt.replace(tzinfo=None))
+            query = query.where(Meal.created_at < filter_.date_lt.replace(tzinfo=None))
 
         compiled_query = query.compile(
             dialect=postgresql.dialect(),
@@ -77,10 +79,9 @@ class MealService:
             protein=meal.protein,
             fat=meal.fat,
             carbs=meal.carbs,
-            timestamp=meal.created_at,
             user_id=user_id,
         )
-        session.add(meal)
+        session.add(meal_db)
         await session.commit()
         return meal_db
 
@@ -100,7 +101,7 @@ class MealService:
             A meal object
         :rtype:
             Meal
-        :raises ValueError:
+        :raises HTTPException:
             If the meal is not found
         :doc-author:
             Trelent
@@ -109,7 +110,10 @@ class MealService:
         meal: Meal | None = (await session.execute(query)).scalar_one_or_none()
 
         if not meal:
-            raise ValueError("Meal not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Meal with id {meal_id} not found",
+            )
         return meal
 
     @staticmethod

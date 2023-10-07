@@ -11,17 +11,16 @@ from starlette import status
 class Meal(BaseModel):
     """Meal model."""
 
+    user_id: int = Field(..., title="User ID", gt=0)
     name: str = Field(..., title="Meal Name")
     description: str = Field(..., title="Meal Description")
     calories: int = Field(..., title="Meal Calories")
     protein: float = Field(..., title="Meal Protein Grams")
     fat: float = Field(..., title="Meal Fat Grams")
     carbs: float = Field(..., title="Meal Carbs Grams")
-    created_at: datetime = Field(..., title="Meal Created At")
-    user_id: int = Field(..., title="User ID")
 
 
-class MealResponse(Meal):
+class MealResponse(Meal, orm_mode=True):
     """Meal response model."""
 
     id: int = Field(..., title="Meal ID")
