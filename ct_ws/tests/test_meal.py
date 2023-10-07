@@ -29,7 +29,7 @@ from ct_ws.db.models.user import User
     ],
 )
 async def test_get_meals(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     params: Dict[str, Any],
     expected_status: int,
@@ -37,14 +37,13 @@ async def test_get_meals(
     """
     Checks Meals get endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     :param params: query parameters to use in the request.
     :param expected_status: expected HTTP status code from the response.
     """
-    response = await client.get(
+    response = await auth_client.get(
         fastapi_app.url_path_for("get_meals"),
-        headers={"Authorization": "Bearer 1"},
         params=params,
     )
     assert response.status_code == expected_status
@@ -72,7 +71,7 @@ async def test_get_meals(
     ],
 )
 async def test_get_meals_date_comparison(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     params: Dict[str, Any],
     expected_status: int,
@@ -80,7 +79,7 @@ async def test_get_meals_date_comparison(
     """
     Check date comparison in the get endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     :param params: query parameters to use in the request.
     :param expected_status: expected HTTP status code from the response.
@@ -91,9 +90,8 @@ async def test_get_meals_date_comparison(
         "limit": 10,
         **params,
     }
-    response = await client.get(
+    response = await auth_client.get(
         fastapi_app.url_path_for("get_meals"),
-        headers={"Authorization": "Bearer 1"},
         params=params,
     )
     assert response.status_code == expected_status
@@ -101,14 +99,14 @@ async def test_get_meals_date_comparison(
 
 @pytest.mark.anyio
 async def test_add_meal(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     session_user: Tuple[AsyncSession, User],
 ) -> None:
     """
     Checks Meals post endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     """
     session, user = session_user
@@ -121,9 +119,8 @@ async def test_add_meal(
         "fat": 0,
         "carbs": 0,
     }
-    response = await client.post(
+    response = await auth_client.post(
         fastapi_app.url_path_for("add_meal"),
-        headers={"Authorization": "Bearer 1"},
         json=params,
     )
     assert response.status_code == status.HTTP_200_OK
@@ -131,39 +128,37 @@ async def test_add_meal(
 
 @pytest.mark.anyio
 async def test_get_meal(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     session_meal: Tuple[AsyncSession, Meal],
 ) -> None:
     """
     Checks Meals post endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     """
     session, meal = session_meal
-    response = await client.get(
+    response = await auth_client.get(
         fastapi_app.url_path_for("get_meal", meal_id=meal.id),
-        headers={"Authorization": "Bearer 1"},
     )
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.anyio
 async def test_delete_meal(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     session_meal: Tuple[AsyncSession, Meal],
 ) -> None:
     """
     Checks Meals post endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     """
     session, meal = session_meal
-    response = await client.delete(
+    response = await auth_client.delete(
         fastapi_app.url_path_for("delete_meal", meal_id=meal.id),
-        headers={"Authorization": "Bearer 1"},
     )
     assert response.status_code == status.HTTP_200_OK

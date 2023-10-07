@@ -12,19 +12,18 @@ from ct_ws.db.models.user import User
 
 @pytest.mark.anyio
 async def test_create_user(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     session_user: Tuple[AsyncSession, User],
 ) -> None:
     """
     Checks Users post endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     """
-    response = await client.post(
+    response = await auth_client.post(
         fastapi_app.url_path_for("create_user"),
-        headers={"Authorization": "Bearer 1"},
         json={
             "username": "tester1",
             "email": "tester1@ct_ws@mail.com",
@@ -32,9 +31,8 @@ async def test_create_user(
     )
     assert response.status_code == status.HTTP_200_OK
 
-    response = await client.post(
+    response = await auth_client.post(
         fastapi_app.url_path_for("create_user"),
-        headers={"Authorization": "Bearer 1"},
         json={
             "username": "tester2",
             "email": "tester2@ct_ws@mail.com",
@@ -49,20 +47,19 @@ async def test_create_user(
 
 @pytest.mark.anyio
 async def test_add_body_parameters(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     session_user: Tuple[AsyncSession, User],
 ) -> None:
     """
     Checks Users post endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     """
     session, user = session_user
-    response = await client.post(
+    response = await auth_client.post(
         fastapi_app.url_path_for("add_body_parameters", user_id=user.id),
-        headers={"Authorization": "Bearer 1"},
         json={
             "weight_kg": 1,
             "height_cm": 1,
@@ -74,20 +71,19 @@ async def test_add_body_parameters(
 
 @pytest.mark.anyio
 async def test_get_users(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     session_user: Tuple[AsyncSession, User],
 ) -> None:
     """
     Checks Users post endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     """
     session, user = session_user
-    response = await client.get(
+    response = await auth_client.get(
         fastapi_app.url_path_for("get_users"),
-        headers={"Authorization": "Bearer 1"},
     )
     assert response.status_code == status.HTTP_200_OK
     assert user.username in response.json()[0]["username"]
@@ -95,36 +91,33 @@ async def test_get_users(
 
 @pytest.mark.anyio
 async def test_get_user(
-    client: AsyncClient,
+    auth_client: AsyncClient,
     fastapi_app: FastAPI,
     session_user: Tuple[AsyncSession, User],
 ) -> None:
     """
     Checks Users post endpoint.
 
-    :param client: client for the app.
+    :param auth_client: client for the app.
     :param fastapi_app: current FastAPI application.
     """
     session, user = session_user
-    response = await client.get(
+    response = await auth_client.get(
         fastapi_app.url_path_for("get_user"),
-        headers={"Authorization": "Bearer 1"},
         params={},
     )
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     session, user = session_user
-    response = await client.get(
+    response = await auth_client.get(
         fastapi_app.url_path_for("get_user"),
-        headers={"Authorization": "Bearer 1"},
         params={"id": user.id},
     )
     assert response.status_code == status.HTTP_200_OK
     assert user.username in response.json()["username"]
 
-    response = await client.get(
+    response = await auth_client.get(
         fastapi_app.url_path_for("get_user"),
-        headers={"Authorization": "Bearer 1"},
         params={"telegram_id": user.telegram_credentials.telegram_id},
     )
     resp = response.json()

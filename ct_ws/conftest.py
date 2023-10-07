@@ -114,6 +114,27 @@ async def client(
 
 
 @pytest.fixture
+async def auth_client(
+    fastapi_app: FastAPI,
+    anyio_backend: Any,
+) -> AsyncGenerator[AsyncClient, None]:
+    """
+    Fixture that creates client for requesting server.
+
+    :param fastapi_app: the application.
+    :yield: client for the app.
+    """
+    async with AsyncClient(
+        app=fastapi_app,
+        base_url="http://test",
+        headers={
+            "Authorization": f"Bearer {settings.auth_token}",
+        },
+    ) as ac:
+        yield ac
+
+
+@pytest.fixture
 async def session_user(
     dbsession: AsyncSession,
 ) -> AsyncGenerator[Tuple[AsyncSession, User], None]:

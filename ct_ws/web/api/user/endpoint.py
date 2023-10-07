@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ct_ws.db.dependencies import get_db_session
 from ct_ws.db.models.user import User
+from ct_ws.services.auth import auth
 from ct_ws.services.telegram_credentials import TelegramCredentialsService
 from ct_ws.services.user import UserService
 from ct_ws.web.api.base.schema import Navigation
@@ -19,12 +20,14 @@ router = APIRouter()
 async def create_user(
     user: UserBase,
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> UserResponse:
     """
     The create_user function creates a new user in the database.
 
     :param user: UserBase: Pass the user object to the create_user function
     :param session: AsyncSession: Pass the session to the service layer
+    :param authenticated: bool: Check if the user is authenticated
     :return: A userresponse object.
     :rtype: UserResponse
     :doc-author: Trelent
@@ -61,6 +64,7 @@ async def add_body_parameters(
     user_id: int,
     body_parameters: UserBodyParametersBase = Body(..., title="User Body Parameters"),
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> Dict[str, str]:
     """
     The add_body_parameters function adds body parameters to a user.
@@ -70,6 +74,7 @@ async def add_body_parameters(
     :param body_parameters:
         UserBodyParametersBase: Define the type of data that is expected to be passed in
     :param session: AsyncSession: Pass the session object to the service
+    :param authenticated: bool: Check if the user is authenticated
     :returns: A dictionary with the key "status" and value "ok"
     :rtype: Dict[str, str]
     :doc-author: Trelent
@@ -91,6 +96,7 @@ async def add_body_parameters(
 async def get_users(
     navigation: Navigation = Depends(),
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> List[UserResponse]:
     """
     The get_users function returns a list of users.
@@ -98,6 +104,7 @@ async def get_users(
     :param navigation:
         Navigation | None: Receive the limit and offset parameters from the request
     :param session: AsyncSession: Pass the session object to the function
+    :param authenticated: bool: Check if the user is authenticated
     :return: A list of userresponse objects
     :rtype: List[UserResponse]
     :doc-author: Trelent
@@ -122,12 +129,14 @@ async def get_users(
 async def get_user(
     filter_: UserFilter = Depends(),
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> UserResponse:
     """
     The get_user function returns a user object.
 
     :param filter_: UserFilter | None: Filter the users
     :param session: AsyncSession: Get the session object
+    :param authenticated: bool: Check if the user is authenticated
     :return: A userresponse object
     :rtype: UserResponse
     :doc-author: Trelent

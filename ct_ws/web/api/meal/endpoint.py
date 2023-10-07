@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ct_ws.db.dependencies import get_db_session
 from ct_ws.db.models.meal import Meal as MealDB
+from ct_ws.services.auth import auth
 from ct_ws.services.meal import MealService
 from ct_ws.services.user import UserService
 from ct_ws.web.api.base.schema import Navigation
@@ -19,6 +20,7 @@ async def get_meals(
     filter_: MealFilter = Depends(),
     navigation: Navigation = Depends(),
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> List[MealResponse]:
     """
     The get_meals function returns a list of meals.
@@ -27,6 +29,7 @@ async def get_meals(
     :param navigation:
         Navigation | None: Pass the limit and offset values to the get_meals function
     :param session: AsyncSession: Pass the session to the service layer
+    :param authenticated: bool: Check if the user is authenticated
     :return: A list of mealresponse objects
     :rtype: List[MealResponse]
     :doc-author: Trelent
@@ -44,12 +47,14 @@ async def get_meals(
 async def add_meal(
     meal: MealSchema,
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> MealResponse:
     """
     The add_meal function adds a meal to the database.
 
     :param meal: MealBase: Get the data from the request body
     :param session: AsyncSession: Get the user_id from the request
+    :param authenticated: bool: Check if the user is authenticated
     :return: A mealresponse object, which is defined in the models
     :rtype: MealResponse
     :doc-author: Trelent
@@ -72,12 +77,14 @@ async def add_meal(
 async def get_meal(
     meal_id: int,
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> MealResponse:
     """
     The get_meal function is used to retrieve a single meal from the database.
 
     :param meal_id: int: Specify the meal id to be retrieved
     :param session: AsyncSession: Get the session object that is passed to the function
+    :param authenticated: bool: Check if the user is authenticated
     :return: A mealresponse object
     :rtype: MealResponse
     :doc-author: Trelent
@@ -94,12 +101,14 @@ async def get_meal(
 async def delete_meal(
     meal_id: int,
     session: AsyncSession = Depends(get_db_session),
+    authenticated: bool = Depends(auth),
 ) -> MealResponse:
     """
     The delete_meal function deletes a meal from the database.
 
     :param meal_id: int: Identify the meal that we want to delete
     :param session: AsyncSession: Get the current session of the request
+    :param authenticated: bool: Check if the user is authenticated
     :return: A mealresponse object
     :rtype: MealResponse
     :doc-author: Trelent
