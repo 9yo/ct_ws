@@ -1,12 +1,12 @@
 """User model."""
-from typing import List
+from typing import Any, Dict, List
 
+from fastapi import HTTPException
 from pydantic import BaseModel, Field
+from pydantic.class_validators import root_validator
+from starlette import status
 
-from ct_ws.web.api.telegram_credentials.schema import (
-    TelegramCredentials,
-    TelegramCredentialsFilter,
-)
+from ct_ws.web.api.telegram_credentials.schema import TelegramCredentials
 from ct_ws.web.api.user_body_parameters.schema import UserBodyParameters
 
 
@@ -27,26 +27,29 @@ class UserBase(BaseModel):
     )
 
 
-class UserFilter(UserIndificator):
+class UserFilter(BaseModel):
     """Model for user filter."""
 
-    telegram_credentials: TelegramCredentialsFilter | None = Field(
-        None,
-        title="User Telegram Credentials",
-    )
+    id: int | None = Field(None, title="User ID")
+    telegram_id: int | None = Field(None, title="User Telegram ID to filter with")
 
-    @property
-    def telegram_id(self) -> int | None:
+    @root_validator
+    @classmethod
+    def check_id_or_telegram_id(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Return the telegram id.
+        Check if id or telegram_id is provided.
 
-        :return: The telegram id.
-        :rtype: int | None
+        :param values: Dict[str, Any]: Values to validate
+        :return: The validated values
+        :rtype: Dict[str, Any]
+        :raises HTTPException: If id or telegram_id is not provided
         """
-        if self.telegram_credentials is None:
-            return None
-
-        return self.telegram_credentials.telegram_id
+        if not values.get("id") and not values.get("telegram_id"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="id or telegram_id must be provided",
+            )
+        return values
 
 
 class UserResponse(UserIndificator, UserBase):
@@ -60,6 +63,7 @@ class UserResponse(UserIndificator, UserBase):
     class Config:
         """Pydantic config."""
 
+        orm_mode = True
         schema_extra = {
             "example": {
                 "id": 1,

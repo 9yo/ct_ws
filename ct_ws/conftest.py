@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import (
 from ct_ws.db.dependencies import get_db_session
 from ct_ws.db.models.meal import Meal
 from ct_ws.db.models.user import User
+from ct_ws.db.models.user_telegram_credentials import UserTelegramCredentials
 from ct_ws.db.utils import create_database, drop_database
 from ct_ws.settings import settings
 from ct_ws.web.application import get_app
@@ -130,8 +131,18 @@ async def session_user(
     :doc-author: Trelent
     """
     user_instance = User(username="test_user")
-
     dbsession.add(user_instance)
+    await dbsession.flush([user_instance])
+
+    telegram_credentials = UserTelegramCredentials(
+        telegram_id=123456789,
+        telegram_username="test_user",
+        user_id=user_instance.id,
+    )
+
+    dbsession.add(telegram_credentials)
+    await dbsession.flush([telegram_credentials])
+
     await dbsession.commit()
 
     yield dbsession, user_instance

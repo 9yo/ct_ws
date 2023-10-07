@@ -14,6 +14,9 @@ class TelegramCredentials(TelegramIndificator):
 
     telegram_username: str = Field(None, title="User Telegram Username")
 
+    class Config:
+        orm_mode = True
+
 
 class TelegramCredentialsFilter(BaseModel):
     """Model for telegram credentials filter."""

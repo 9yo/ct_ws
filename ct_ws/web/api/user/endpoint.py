@@ -4,9 +4,11 @@ from fastapi import APIRouter, Body, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ct_ws.db.dependencies import get_db_session
+from ct_ws.db.models.user import User
 from ct_ws.services.telegram_credentials import TelegramCredentialsService
 from ct_ws.services.user import UserService
 from ct_ws.web.api.base.schema import Navigation
+from ct_ws.web.api.telegram_credentials.schema import TelegramCredentials
 from ct_ws.web.api.user.schema import UserBase, UserFilter, UserResponse
 from ct_ws.web.api.user_body_parameters.schema import UserBodyParametersBase
 
@@ -27,22 +29,31 @@ async def create_user(
     :rtype: UserResponse
     :doc-author: Trelent
     """
-    user_db = await UserService.create_user(
+    user_db: "User" = await UserService.create_user(
         session=session,
         username=user.username,
         email=user.email,
     )
+    tcr = None
     if user.telegram_credentials:
-        await TelegramCredentialsService.create_telegram_credentials(
-            session=session,
-            user_id=user_db.id,
-            telegram_id=user.telegram_credentials.telegram_id,
-            telegram_username=user.telegram_credentials.telegram_username,
+        user_db.telegram_credentials = (
+            await TelegramCredentialsService.create_telegram_credentials(
+                session=session,
+                user_id=user_db.id,
+                telegram_id=user.telegram_credentials.telegram_id,
+                telegram_username=user.telegram_credentials.telegram_username,
+            )
         )
+        tcr = TelegramCredentials.from_orm(user_db.telegram_credentials)
 
     await session.commit()
-
-    return UserResponse.from_orm(user_db)
+    return UserResponse(
+        id=user_db.id,
+        username=user_db.username,
+        email=user_db.email,
+        telegram_credentials=tcr,
+        body_parameters_history=[],
+    )
 
 
 @router.post("/{user_id}/body_parameters")
@@ -78,7 +89,7 @@ async def add_body_parameters(
 
 @router.get("")
 async def get_users(
-    navigation: Navigation | None = Body(None, alias="navigation"),
+    navigation: Navigation = Depends(),
     session: AsyncSession = Depends(get_db_session),
 ) -> List[UserResponse]:
     """
@@ -98,6 +109,8 @@ async def get_users(
         offset = navigation.offset
     users = await UserService.get_users(
         session=session,
+        with_body_params=True,
+        with_telegram_credentials=True,
         limit=limit,
         offset=offset,
     )
@@ -105,9 +118,9 @@ async def get_users(
     return [UserResponse.from_orm(user) for user in users]
 
 
-@router.get("/{user_id}")
+@router.get("/")
 async def get_user(
-    filter_: UserFilter | None = Body(None, alias="filter"),
+    filter_: UserFilter = Depends(),
     session: AsyncSession = Depends(get_db_session),
 ) -> UserResponse:
     """
@@ -128,6 +141,8 @@ async def get_user(
         session=session,
         user_id=user_id,
         tg_id=tg_id,
+        with_body_params=True,
+        with_telegram_credentials=True,
     )
 
     return UserResponse.from_orm(user_db)
